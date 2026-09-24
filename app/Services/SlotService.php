@@ -14,10 +14,17 @@ class SlotService
     /**
      * Open slot start times (UTC) in [$from, $to), ascending.
      *
+     * The admin may book inside the minimum-notice window (never in the past), and a
+     * rescheduled appointment must not block its own slot.
+     *
      * @return Collection<int, CarbonImmutable>
      */
-    public function availableSlots(CarbonImmutable $from, CarbonImmutable $to): Collection
-    {
+    public function availableSlots(
+        CarbonImmutable $from,
+        CarbonImmutable $to,
+        bool $ignoreMinimumNotice = false,
+        ?int $exceptAppointmentId = null,
+    ): Collection {
         $from = $from->utc();
         $to = $to->utc();
 
@@ -30,7 +37,7 @@ class SlotService
         $length = $settings->slot_minutes;
         $buffer = $settings->buffer_minutes;
 
-        $earliest = CarbonImmutable::now('UTC')->addHours($settings->min_notice_hours);
+        $earliest = CarbonImmutable::now('UTC')->addHours($ignoreMinimumNotice ? 0 : $settings->min_notice_hours);
         $lastDate = CarbonImmutable::now($tz)->startOfDay()->addDays($settings->max_days_ahead)->toDateString();
 
         $firstDay = $from->setTimezone($tz)->startOfDay();
@@ -49,6 +56,7 @@ class SlotService
 
         $appointments = Appointment::active()
             ->overlapping($from->subMinutes($buffer + $length), $to->addMinutes($buffer + $length))
+            ->when($exceptAppointmentId, fn ($query) => $query->whereKeyNot($exceptAppointmentId))
             ->get(['start_at', 'end_at']);
 
         $slots = collect();

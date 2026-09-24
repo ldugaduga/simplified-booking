@@ -1,10 +1,10 @@
 <?php
 
+use App\Http\Controllers\Admin\AppointmentController;
 use App\Http\Controllers\Admin\AvailabilityController;
 use App\Http\Controllers\Admin\BlockedDateController;
 use App\Http\Controllers\BookingController;
 use Illuminate\Support\Facades\Route;
-use Inertia\Inertia;
 
 Route::get('/', [BookingController::class, 'show'])->name('home');
 Route::get('slots', [BookingController::class, 'slots'])->middleware('throttle:60,1')->name('booking.slots');
@@ -12,9 +12,11 @@ Route::post('book', [BookingController::class, 'store'])->name('booking.store');
 Route::get('book/confirmed/{appointment}', [BookingController::class, 'confirmed'])->middleware('signed')->name('booking.confirmed');
 
 Route::middleware(['auth', 'verified'])->prefix('admin')->group(function () {
-    Route::get('/', function () {
-        return Inertia::render('Dashboard');
-    })->name('dashboard');
+    Route::get('/', [AppointmentController::class, 'index'])->name('dashboard');
+    Route::get('slots', [AppointmentController::class, 'slots'])->name('admin.slots');
+    Route::post('appointments', [AppointmentController::class, 'store'])->name('admin.appointments.store');
+    Route::patch('appointments/{appointment}/reschedule', [AppointmentController::class, 'reschedule'])->name('admin.appointments.reschedule');
+    Route::patch('appointments/{appointment}/cancel', [AppointmentController::class, 'cancel'])->name('admin.appointments.cancel');
 
     Route::get('availability', [AvailabilityController::class, 'edit'])->name('admin.availability.edit');
     Route::put('availability/hours', [AvailabilityController::class, 'updateHours'])->name('admin.availability.hours.update');

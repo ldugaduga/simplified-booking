@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Inertia\Testing\AssertableInertia as Assert;
 use Tests\TestCase;
 
 class DashboardTest extends TestCase
@@ -21,7 +22,8 @@ class DashboardTest extends TestCase
         $user = User::factory()->create();
         $this->actingAs($user);
 
-        $response = $this->get('/admin');
-        $response->assertStatus(200);
+        $this->get('/admin')
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page->component('admin/Appointments'));
     }
 }

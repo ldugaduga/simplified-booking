@@ -39,6 +39,9 @@ class Setting extends Model
      */
     public static function current(): self
     {
-        return static::query()->firstOrCreate(['id' => 1]);
+        $settings = static::query()->firstOrCreate(['id' => 1]);
+
+        // A freshly inserted row only holds the id; reload it to pick up the column defaults.
+        return $settings->wasRecentlyCreated ? $settings->refresh() : $settings;
     }
 }

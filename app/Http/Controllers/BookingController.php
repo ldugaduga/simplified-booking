@@ -28,7 +28,7 @@ class BookingController extends Controller
      */
     public const INSTANT = 'date_format:Y-m-d\TH:i:sp,Y-m-d\TH:i:s.vp,Y-m-d\TH:i:sP,Y-m-d\TH:i:s.vP';
 
-    private const SLOT_TAKEN = 'That time is no longer available. Please pick another.';
+    public const SLOT_TAKEN = 'That time is no longer available. Please pick another.';
 
     public function __construct(private SlotService $slots) {}
 

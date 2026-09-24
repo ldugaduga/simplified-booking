@@ -165,6 +165,41 @@ class SlotServiceTest extends TestCase
         $this->assertTrue($slots->every(fn ($s) => $s->timezoneName === 'UTC'));
     }
 
+    public function test_admin_can_ignore_minimum_notice_but_not_the_past()
+    {
+        $this->travelTo(CarbonImmutable::parse('2030-01-07 09:10', 'Asia/Manila'));
+        Setting::current()->update(['min_notice_hours' => 4]);
+
+        $from = CarbonImmutable::parse('2030-01-07', 'Asia/Manila')->startOfDay();
+        $local = fn ($slots) => $slots->map(fn ($s) => $s->setTimezone('Asia/Manila')->format('H:i'))->values();
+
+        $this->assertSame('13:30', $local(app(SlotService::class)->availableSlots($from, $from->addDay()))->first());
+        $admin = $local(app(SlotService::class)->availableSlots($from, $from->addDay(), ignoreMinimumNotice: true));
+        $this->assertSame('09:30', $admin->first());
+        $this->assertNotContains('09:00', $admin);
+    }
+
+    public function test_excluded_appointment_frees_its_own_slot_and_buffer()
+    {
+        Setting::current()->update(['buffer_minutes' => 15]);
+        $own = Appointment::factory()->create([
+            'start_at' => CarbonImmutable::parse('2030-01-07 10:00', 'Asia/Manila')->utc(),
+            'end_at' => CarbonImmutable::parse('2030-01-07 10:30', 'Asia/Manila')->utc(),
+        ]);
+        $this->appointment('2030-01-07 14:00', '2030-01-07 14:30');
+
+        $from = CarbonImmutable::parse('2030-01-07', 'Asia/Manila')->startOfDay();
+        $local = app(SlotService::class)
+            ->availableSlots($from, $from->addDay(), exceptAppointmentId: $own->id)
+            ->map(fn ($s) => $s->setTimezone('Asia/Manila')->format('H:i'));
+
+        $this->assertContains('09:30', $local);
+        $this->assertContains('10:00', $local);
+        $this->assertContains('10:30', $local);
+        $this->assertNotContains('14:00', $local);
+        $this->assertNotContains('13:30', $local);
+    }
+
     private function rule(int $weekday, string $start, string $end): void
     {
         AvailabilityRule::create(['weekday' => $weekday, 'start_time' => $start, 'end_time' => $end]);

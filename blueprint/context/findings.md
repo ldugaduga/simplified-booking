@@ -7,22 +7,6 @@
 > finding is `open` or `fixed`, then archives resolved findings with the work
 > and resets this file.
 
-### F-01 [P3] fixed - Date inputs accept non-ISO and offset-less values
-
-**File:** app/Http/Controllers/BookingController.php:49
-**Found:** 2026-09-24 by /audit independent (scope: current; lens: quality, security)
-**Why it matters:** The spec requires `start`/`end` (and `start_at`) to be ISO-8601 instants with an offset or `Z`, otherwise 422. Laravel's `date` rule (strtotime plus checkdate) also accepts values such as `2030-01-07` or `January 7 2030 10:00`, which are then parsed in the app timezone (UTC). The same rule is used for `start_at` in app/Http/Requests/StoreBookingRequest.php:24. Impact is low because the client always sends `Z` instants and the slot grid check still guards bookings, but the contract is looser than specified.
-**Suggested fix:** Replace `date` with an explicit instant format, for example `date_format:Y-m-d\TH:i:sP,Y-m-d\TH:i:s\Z` (or an ISO-8601 regex), on `start`, `end` and `start_at`, and add one 422 case for an offset-less value.
-**Resolution:** Fixed on fix/strict-iso-instants-and-booking-page-test: `start`, `end` and `start_at` now use `BookingController::INSTANT` (date_format with `p`/`P` and `.v` variants); tests cover offset-less and date-only values returning 422 and millisecond `Z` accepted. Awaiting `/audit` re-review.
-
-### F-02 [P3] fixed - No test asserts the public booking page render and props
-
-**File:** app/Http/Controllers/BookingController.php:32
-**Found:** 2026-09-24 by /audit independent (scope: current; lens: tests)
-**Why it matters:** `BookingController@show` replaced the `/` closure and passes `businessName`, `slotMinutes` and `maxDaysAhead`. Existing tests (tests/Feature/ExampleTest.php:14, tests/Feature/Auth/AdminOnlyAccessTest.php:39) only assert `/` returns 200; nothing checks the `booking/Book` component or its props, so a prop rename or leak of extra data would go unnoticed.
-**Suggested fix:** Add one `assertInertia` test in tests/Feature/Booking/ asserting component `booking/Book` and exactly the three props.
-**Resolution:** Fixed on fix/strict-iso-instants-and-booking-page-test: tests/Feature/Booking/BookingPageTest.php asserts component `booking/Book`, the three prop values, and that no page-specific props exist beyond them (shared props excluded); a temporary prop rename made it fail. Awaiting `/audit` re-review.
-
 ### F-03 [P2] unverified - Concurrent SQLite bookings may surface a lock error instead of the friendly slot-taken error
 
 **File:** app/Http/Controllers/BookingController.php:78

@@ -61,3 +61,25 @@ export interface BlockedDate {
     reason: string | null;
     is_past: boolean;
 }
+
+export interface AppointmentRow {
+    id: number;
+    start_at: string;
+    end_at: string;
+    status: 'confirmed' | 'cancelled';
+    name: string;
+    email: string;
+    notes: string | null;
+    created_by_admin: boolean;
+}
+
+export interface Paginated<T> {
+    data: T[];
+    current_page: number;
+    last_page: number;
+    from: number | null;
+    to: number | null;
+    total: number;
+    prev_page_url: string | null;
+    next_page_url: string | null;
+}

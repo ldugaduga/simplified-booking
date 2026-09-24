@@ -72,4 +72,19 @@ class SlotsEndpointTest extends TestCase
         $this->getJson('/slots?start=2030-01-01T00:00:00Z&end=2030-02-16T00:00:00Z')->assertStatus(422)->assertJsonValidationErrors(['end']);
         $this->getJson('/slots?start=2030-01-01T00:00:00Z&end=2030-02-15T00:00:00Z')->assertOk();
     }
+
+    public function test_only_iso_instants_with_an_offset_are_accepted()
+    {
+        $this->getJson('/slots?start=2030-01-06T16:00:00.000Z&end=2030-01-07T16:00:00.000Z')
+            ->assertOk()
+            ->assertJsonCount(16, 'slots');
+
+        $this->getJson('/slots?start=2030-01-07T00:00:00&end=2030-01-08T00:00:00Z')
+            ->assertStatus(422)
+            ->assertJsonValidationErrors(['start']);
+
+        $this->getJson('/slots?start=2030-01-07T00:00:00Z&end=2030-01-08')
+            ->assertStatus(422)
+            ->assertJsonValidationErrors(['end']);
+    }
 }

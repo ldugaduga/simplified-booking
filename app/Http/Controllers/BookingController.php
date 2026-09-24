@@ -22,6 +22,12 @@ class BookingController extends Controller
 {
     private const MAX_WINDOW_DAYS = 45;
 
+    /**
+     * ISO-8601 instants with an offset or Z, optionally with milliseconds (as sent by toISOString).
+     * Both p and P are needed: the rule round-trips the value, and only p prints "Z" and only P prints "+00:00".
+     */
+    public const INSTANT = 'date_format:Y-m-d\TH:i:sp,Y-m-d\TH:i:s.vp,Y-m-d\TH:i:sP,Y-m-d\TH:i:s.vP';
+
     private const SLOT_TAKEN = 'That time is no longer available. Please pick another.';
 
     public function __construct(private SlotService $slots) {}
@@ -46,8 +52,8 @@ class BookingController extends Controller
     public function slots(Request $request): JsonResponse
     {
         $request->validate([
-            'start' => ['required', 'date'],
-            'end' => ['required', 'date', 'after:start'],
+            'start' => ['required', self::INSTANT],
+            'end' => ['required', self::INSTANT, 'after:start'],
         ]);
 
         $start = CarbonImmutable::parse($request->query('start'))->utc();

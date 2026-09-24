@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests;
 
+use App\Http\Controllers\BookingController;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Facades\RateLimiter;
@@ -21,7 +22,7 @@ class StoreBookingRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'start_at' => ['required', 'date'],
+            'start_at' => ['required', BookingController::INSTANT],
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'email:rfc,filter', 'max:255'],
             'notes' => ['nullable', 'string', 'max:1000'],

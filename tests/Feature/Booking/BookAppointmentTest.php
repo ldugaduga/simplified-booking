@@ -82,6 +82,14 @@ class BookAppointmentTest extends TestCase
         }
     }
 
+    public function test_start_time_without_an_offset_is_rejected()
+    {
+        $this->post('/book', $this->payload(['start_at' => '2030-01-07 02:00:00']))
+            ->assertSessionHasErrors('start_at');
+
+        $this->assertDatabaseCount('appointments', 0);
+    }
+
     public function test_double_booking_race_returns_a_friendly_error()
     {
         Appointment::factory()->create(['start_at' => '2030-01-07 02:00:00', 'end_at' => '2030-01-07 02:30:00']);

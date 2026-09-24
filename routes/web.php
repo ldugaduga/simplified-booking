@@ -2,13 +2,14 @@
 
 use App\Http\Controllers\Admin\AvailabilityController;
 use App\Http\Controllers\Admin\BlockedDateController;
+use App\Http\Controllers\BookingController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
-// Public booking page (calendar + slot picker arrive in milestone 3).
-Route::get('/', function () {
-    return Inertia::render('Welcome');
-})->name('home');
+Route::get('/', [BookingController::class, 'show'])->name('home');
+Route::get('slots', [BookingController::class, 'slots'])->middleware('throttle:60,1')->name('booking.slots');
+Route::post('book', [BookingController::class, 'store'])->name('booking.store');
+Route::get('book/confirmed/{appointment}', [BookingController::class, 'confirmed'])->middleware('signed')->name('booking.confirmed');
 
 Route::middleware(['auth', 'verified'])->prefix('admin')->group(function () {
     Route::get('/', function () {

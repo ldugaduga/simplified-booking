@@ -9,7 +9,7 @@ their archived specs refer to those IDs.
 
 - [x] 1. **Admin-only authentication** - login, password reset, profile and password settings; public registration and self-delete removed; `/admin` protected; login rate-limited
 - [x] 2. **Booking data model** - settings, availability rules, blocked dates, and appointments tables with models, seeder (admin account and Mon-Fri 9-17 defaults), and the `slot_lock` double-booking guard
-- [ ] 3. **Availability management** - admin page for weekly hours, blocked dates, and booking rules, plus a tested `SlotService` that computes open slots across timezones
+- [x] 3. **Availability management** - admin page for weekly hours, blocked dates, and booking rules, plus a tested `SlotService` that computes open slots across timezones
 - [ ] 4. **Public booking flow** - month calendar, open times in the visitor's timezone, booking form, confirmation page; transactional slot check, rate limit, and honeypot field
 - [ ] 5. **Admin appointments** - dashboard list with date and status filters; admin create, reschedule, and cancel
 - [ ] 6. **Confirmation email** - queued email to the visitor with an `.ics` invite, sent on booking, reschedule, and cancel

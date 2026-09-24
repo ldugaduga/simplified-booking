@@ -40,3 +40,24 @@ export interface User {
 }
 
 export type BreadcrumbItemType = BreadcrumbItem;
+
+export interface AvailabilityRule {
+    weekday: number;
+    start_time: string;
+    end_time: string;
+}
+
+export interface BookingSettings {
+    timezone: string;
+    slot_minutes: number;
+    buffer_minutes: number;
+    min_notice_hours: number;
+    max_days_ahead: number;
+}
+
+export interface BlockedDate {
+    id: number;
+    date: string;
+    reason: string | null;
+    is_past: boolean;
+}

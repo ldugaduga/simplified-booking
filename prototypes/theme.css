@@ -1,0 +1,202 @@
+/* Simplified Booking theme - the durable output of /prototype.
+   Crisp and professional: cool neutral grays, thin borders, small radii, teal accent, Inter.
+   Port target: resources/css/app.css (:root and .dark). The app's shadcn tokens use
+   bare HSL triplets, so each color here is written as hsl(<triplet>) and the triplet
+   copies straight across under the matching shadcn name noted on the right. */
+
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap");
+
+:root {
+  /* surfaces */
+  --bg: hsl(210 20% 98%);              /* --background (page)   */
+  --surface: hsl(0 0% 100%);           /* --card, --popover     */
+  --surface-2: hsl(210 20% 96%);       /* --muted, --secondary  */
+  --border: hsl(214 18% 88%);          /* --border              */
+  --input: hsl(214 16% 82%);           /* --input               */
+
+  /* text */
+  --text: hsl(215 28% 14%);            /* --foreground          */
+  --muted: hsl(215 14% 42%);           /* --muted-foreground    */
+  --faint: hsl(215 12% 64%);           /* hints, disabled       */
+
+  /* accent (teal) */
+  --accent: hsl(175 77% 26%);          /* --primary, --ring     */
+  --accent-hover: hsl(175 80% 21%);
+  --accent-ink: hsl(0 0% 100%);        /* --primary-foreground  */
+  --accent-soft: hsl(172 60% 94%);     /* --accent (tinted bg)  */
+  --accent-soft-ink: hsl(175 77% 22%); /* --accent-foreground   */
+
+  /* status */
+  --danger: hsl(0 72% 48%);            /* --destructive         */
+  --danger-soft: hsl(0 86% 97%);
+  --warning: hsl(32 90% 40%);
+  --warning-soft: hsl(40 90% 95%);
+  --success: hsl(152 60% 32%);
+  --success-soft: hsl(145 60% 95%);
+
+  /* booking calendar states */
+  --day-available-bg: var(--accent-soft);
+  --day-available-ink: var(--accent-soft-ink);
+  --day-selected-bg: var(--accent);
+  --day-selected-ink: var(--accent-ink);
+  --day-unavailable-ink: var(--faint);
+  --day-blocked-ink: var(--faint);
+  --slot-border: hsl(175 45% 70%);
+  --slot-ink: var(--accent);
+
+  /* sidebar (admin) */
+  --sidebar-bg: hsl(210 20% 96%);      /* --sidebar-background  */
+  --sidebar-active-bg: hsl(0 0% 100%);
+
+  /* type */
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: ui-monospace, "SF Mono", Menlo, monospace;
+  --text-xs: 12px;
+  --text-sm: 13px;
+  --text-base: 14px;
+  --text-md: 16px;
+  --text-lg: 20px;
+  --text-xl: 24px;
+
+  /* scale */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 24px;
+  --space-6: 32px;
+  --space-7: 48px;
+  --radius-sm: 4px;
+  --radius: 6px;                       /* --radius (0.375rem)   */
+  --radius-lg: 8px;
+  --shadow: 0 1px 2px hsl(215 28% 14% / 0.06);
+  --shadow-lg: 0 8px 24px hsl(215 28% 14% / 0.12);
+  --overlay: hsl(215 28% 8% / 0.45);
+}
+
+/* dark variant: port into .dark in app.css */
+[data-theme="dark"] {
+  --bg: hsl(216 28% 7%);
+  --surface: hsl(216 24% 10%);
+  --surface-2: hsl(216 20% 14%);
+  --border: hsl(216 16% 20%);
+  --input: hsl(216 14% 26%);
+
+  --text: hsl(210 20% 94%);
+  --muted: hsl(214 12% 64%);
+  --faint: hsl(214 10% 42%);
+
+  --accent: hsl(172 66% 45%);
+  --accent-hover: hsl(172 66% 52%);
+  --accent-ink: hsl(216 28% 7%);
+  --accent-soft: hsl(174 50% 15%);
+  --accent-soft-ink: hsl(170 60% 72%);
+
+  --danger: hsl(0 80% 64%);
+  --danger-soft: hsl(0 50% 16%);
+  --warning: hsl(36 90% 60%);
+  --warning-soft: hsl(36 50% 15%);
+  --success: hsl(150 55% 55%);
+  --success-soft: hsl(150 40% 14%);
+
+  --slot-border: hsl(174 40% 30%);
+  --sidebar-bg: hsl(216 28% 8%);
+  --sidebar-active-bg: hsl(216 20% 14%);
+  --shadow: 0 1px 2px hsl(0 0% 0% / 0.4);
+  --shadow-lg: 0 8px 24px hsl(0 0% 0% / 0.5);
+}
+
+/* shared mockup primitives (reference only, not ported) */
+*,
+*::before,
+*::after { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-sans);
+  font-size: var(--text-base);
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+
+h1, h2, h3 { margin: 0; font-weight: 600; letter-spacing: -0.01em; }
+p { margin: 0; }
+a { color: var(--accent); text-decoration: none; }
+a:hover { text-decoration: underline; }
+
+.muted { color: var(--muted); }
+.faint { color: var(--faint); }
+
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow);
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  height: 36px;
+  padding: 0 var(--space-4);
+  border: 1px solid transparent;
+  border-radius: var(--radius);
+  font: 500 var(--text-base) / 1 var(--font-sans);
+  cursor: pointer;
+}
+.btn-primary { background: var(--accent); color: var(--accent-ink); }
+.btn-primary:hover { background: var(--accent-hover); }
+.btn-outline { background: var(--surface); color: var(--text); border-color: var(--input); }
+.btn-outline:hover { background: var(--surface-2); }
+.btn-ghost { background: transparent; color: var(--muted); }
+.btn-ghost:hover { background: var(--surface-2); color: var(--text); }
+.btn-danger { background: var(--danger); color: hsl(0 0% 100%); }
+.btn-sm { height: 30px; padding: 0 var(--space-3); font-size: var(--text-sm); }
+.btn-block { width: 100%; }
+
+.field { display: grid; gap: 6px; }
+.label { font-size: var(--text-sm); font-weight: 500; }
+.input,
+.select,
+.textarea {
+  width: 100%;
+  height: 36px;
+  padding: 0 var(--space-3);
+  background: var(--surface);
+  color: var(--text);
+  border: 1px solid var(--input);
+  border-radius: var(--radius);
+  font: 400 var(--text-base) / 1.4 var(--font-sans);
+}
+.textarea { height: auto; min-height: 88px; padding: var(--space-2) var(--space-3); resize: vertical; }
+.input:focus,
+.select:focus,
+.textarea:focus { outline: 2px solid var(--accent); outline-offset: 1px; border-color: var(--accent); }
+.input.is-invalid { border-color: var(--danger); }
+.field-error { color: var(--danger); font-size: var(--text-sm); }
+.hint { color: var(--muted); font-size: var(--text-xs); }
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  height: 22px;
+  padding: 0 var(--space-2);
+  border-radius: 999px;
+  font-size: var(--text-xs);
+  font-weight: 500;
+}
+.badge-success { background: var(--success-soft); color: var(--success); }
+.badge-muted { background: var(--surface-2); color: var(--muted); }
+.badge-warning { background: var(--warning-soft); color: var(--warning); }
+
+.theme-toggle {
+  position: fixed;
+  right: var(--space-4);
+  bottom: var(--space-4);
+  z-index: 50;
+}

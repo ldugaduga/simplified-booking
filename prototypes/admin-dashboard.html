@@ -1,0 +1,200 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Appointments - Mockup</title>
+  <link rel="stylesheet" href="theme.css">
+  <link rel="stylesheet" href="admin-shell.css">
+  <style>
+    .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--space-4); margin-bottom: var(--space-5); }
+    .stat { padding: var(--space-4); }
+    .stat .k { font-size: var(--text-sm); color: var(--muted); }
+    .stat .v { font-size: var(--text-xl); font-weight: 600; margin-top: 2px; font-variant-numeric: tabular-nums; }
+    .stat .d { font-size: var(--text-xs); color: var(--muted); margin-top: 2px; }
+
+    .toolbar { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); padding: var(--space-3) var(--space-4); border-bottom: 1px solid var(--border); }
+    .tabs { display: flex; gap: 2px; padding: 2px; background: var(--surface-2); border-radius: var(--radius); }
+    .tabs button { border: 0; background: transparent; color: var(--muted); padding: 6px 12px; border-radius: var(--radius-sm); font: 500 var(--text-sm) var(--font-sans); cursor: pointer; }
+    .tabs button.on { background: var(--surface); color: var(--text); box-shadow: var(--shadow); }
+    .filters { display: flex; gap: var(--space-2); }
+    .filters .input, .filters .select { height: 32px; font-size: var(--text-sm); width: auto; }
+
+    table { width: 100%; border-collapse: collapse; }
+    th { text-align: left; font-size: var(--text-xs); font-weight: 500; color: var(--muted); text-transform: uppercase; letter-spacing: 0.04em; padding: var(--space-2) var(--space-4); background: var(--surface-2); border-bottom: 1px solid var(--border); }
+    td { padding: var(--space-3) var(--space-4); border-bottom: 1px solid var(--border); vertical-align: middle; }
+    tr:last-child td { border-bottom: 0; }
+    tbody tr:hover { background: var(--surface-2); }
+    .when strong { display: block; font-weight: 600; font-variant-numeric: tabular-nums; }
+    .when span, .who span { font-size: var(--text-sm); color: var(--muted); }
+    .who strong { display: block; font-weight: 500; }
+    .notes { max-width: 260px; color: var(--muted); font-size: var(--text-sm); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .row-actions { display: flex; gap: var(--space-1); justify-content: flex-end; }
+    tr.cancelled td { color: var(--faint); }
+    tr.cancelled .when strong, tr.cancelled .who strong { text-decoration: line-through; color: var(--faint); }
+    .date-sep td { background: var(--bg); font-size: var(--text-xs); font-weight: 600; color: var(--muted); padding: var(--space-2) var(--space-4); }
+    .tfoot { display: flex; justify-content: space-between; align-items: center; padding: var(--space-3) var(--space-4); border-top: 1px solid var(--border); font-size: var(--text-sm); color: var(--muted); }
+
+    .overlay { position: fixed; inset: 0; background: var(--overlay); display: grid; place-items: center; z-index: 40; }
+    .dialog { width: 100%; max-width: 440px; padding: var(--space-5); box-shadow: var(--shadow-lg); }
+    .dialog h2 { font-size: var(--text-md); }
+    .dialog .current { margin: var(--space-3) 0 var(--space-4); padding: var(--space-3); background: var(--surface-2); border-radius: var(--radius); font-size: var(--text-sm); }
+    .dialog form { display: grid; gap: var(--space-4); }
+    .dialog .two { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-3); }
+    .dialog .foot { display: flex; justify-content: flex-end; gap: var(--space-2); margin-top: var(--space-2); }
+    .check-row { display: flex; align-items: center; gap: var(--space-2); font-size: var(--text-sm); }
+    .check-row input { accent-color: var(--accent); width: 16px; height: 16px; }
+    @media (max-width: 900px) {
+      .stats { grid-template-columns: 1fr; }
+      .toolbar { flex-direction: column; align-items: stretch; }
+      .filters { flex-wrap: wrap; }
+      .card:has(table) { overflow-x: auto; }
+      .notes { display: none; }
+      .dialog { margin: var(--space-4); }
+      .dialog .two { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <aside class="sidebar">
+      <div class="brand"><span class="logo">NC</span>Northgate Booking</div>
+      <nav>
+        <a class="active" href="admin-dashboard.html">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="17" rx="2"/><path d="M3 9h18M8 2v4M16 2v4"/></svg>
+          Appointments
+        </a>
+        <a href="admin-availability.html">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
+          Availability
+        </a>
+        <a href="booking.html">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 3h7v7M10 14 21 3M19 14v5a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h5"/></svg>
+          View booking page
+        </a>
+      </nav>
+      <div class="user">
+        <span class="avatar-sm">MS</span>
+        <div><strong>Maria Santos</strong><span>admin@northgate.ph</span></div>
+      </div>
+    </aside>
+
+    <div class="main">
+      <header class="topbar">
+        <h1>Appointments</h1>
+        <button class="btn btn-primary btn-sm">+ New appointment</button>
+      </header>
+
+      <div class="content">
+        <div class="stats">
+          <div class="card stat"><div class="k">Today</div><div class="v">3</div><div class="d">Next at 10:30 AM</div></div>
+          <div class="card stat"><div class="k">This week</div><div class="v">14</div><div class="d">7.0 hours booked</div></div>
+          <div class="card stat"><div class="k">Cancelled (30 days)</div><div class="v">2</div><div class="d">4% of bookings</div></div>
+        </div>
+
+        <div class="card">
+          <div class="toolbar">
+            <div class="tabs"><button class="on">Upcoming</button><button>Past</button><button>All</button></div>
+            <div class="filters">
+              <input class="input" type="search" placeholder="Search name or email" style="width:200px">
+              <select class="select"><option>Any status</option><option>Confirmed</option><option>Cancelled</option></select>
+              <input class="input" type="date" value="2026-10-07">
+            </div>
+          </div>
+          <table>
+            <thead>
+              <tr><th>When</th><th>Who</th><th>Notes</th><th>Status</th><th></th></tr>
+            </thead>
+            <tbody>
+              <tr class="date-sep"><td colspan="5">Today · Wednesday, Oct 7</td></tr>
+              <tr>
+                <td class="when"><strong>10:30 AM</strong><span>30 min</span></td>
+                <td class="who"><strong>Andrea Lim</strong><span>andrea.lim@lim-trading.com</span></td>
+                <td class="notes">Quarterly review of payroll setup</td>
+                <td><span class="badge badge-success">Confirmed</span></td>
+                <td><div class="row-actions"><button class="btn btn-ghost btn-sm">Reschedule</button><button class="btn btn-ghost btn-sm">Cancel</button></div></td>
+              </tr>
+              <tr>
+                <td class="when"><strong>1:00 PM</strong><span>30 min</span></td>
+                <td class="who"><strong>Paolo Cruz</strong><span>pcruz@outlook.com</span></td>
+                <td class="notes">First-time client, referred by Andrea</td>
+                <td><span class="badge badge-success">Confirmed</span></td>
+                <td><div class="row-actions"><button class="btn btn-ghost btn-sm">Reschedule</button><button class="btn btn-ghost btn-sm">Cancel</button></div></td>
+              </tr>
+              <tr class="cancelled">
+                <td class="when"><strong>2:30 PM</strong><span>30 min</span></td>
+                <td class="who"><strong>Kevin Tan</strong><span>kevin.tan@gmail.com</span></td>
+                <td class="notes">-</td>
+                <td><span class="badge badge-muted">Cancelled</span></td>
+                <td><div class="row-actions"></div></td>
+              </tr>
+              <tr>
+                <td class="when"><strong>4:00 PM</strong><span>30 min · by admin</span></td>
+                <td class="who"><strong>Grace Villanueva</strong><span>grace@villanueva-law.ph</span></td>
+                <td class="notes">Phone follow-up on contract terms</td>
+                <td><span class="badge badge-success">Confirmed</span></td>
+                <td><div class="row-actions"><button class="btn btn-ghost btn-sm">Reschedule</button><button class="btn btn-ghost btn-sm">Cancel</button></div></td>
+              </tr>
+              <tr class="date-sep"><td colspan="5">Thursday, Oct 8</td></tr>
+              <tr>
+                <td class="when"><strong>9:00 AM</strong><span>30 min</span></td>
+                <td class="who"><strong>Daniel Mercado</strong><span>dan.mercado@yahoo.com</span></td>
+                <td class="notes">Wants help with BIR registration for a new sole proprietorship</td>
+                <td><span class="badge badge-success">Confirmed</span></td>
+                <td><div class="row-actions"><button class="btn btn-ghost btn-sm">Reschedule</button><button class="btn btn-ghost btn-sm">Cancel</button></div></td>
+              </tr>
+              <tr>
+                <td class="when"><strong>11:00 AM</strong><span>30 min</span></td>
+                <td class="who"><strong>Sofia Ramos</strong><span>sofia@ramosbakery.com</span></td>
+                <td class="notes">-</td>
+                <td><span class="badge badge-success">Confirmed</span></td>
+                <td><div class="row-actions"><button class="btn btn-ghost btn-sm">Reschedule</button><button class="btn btn-ghost btn-sm">Cancel</button></div></td>
+              </tr>
+              <tr class="date-sep"><td colspan="5">Friday, Oct 9</td></tr>
+              <tr>
+                <td class="when"><strong>9:30 AM</strong><span>30 min</span></td>
+                <td class="who"><strong>Miguel Aquino</strong><span>maquino@aquino-group.com</span></td>
+                <td class="notes">Rescheduled from Oct 6</td>
+                <td><span class="badge badge-success">Confirmed</span></td>
+                <td><div class="row-actions"><button class="btn btn-ghost btn-sm">Reschedule</button><button class="btn btn-ghost btn-sm">Cancel</button></div></td>
+              </tr>
+              <tr>
+                <td class="when"><strong>3:00 PM</strong><span>30 min</span></td>
+                <td class="who"><strong>Hannah Sy</strong><span>hannah.sy@gmail.com</span></td>
+                <td class="notes">Year-end tax planning</td>
+                <td><span class="badge badge-success">Confirmed</span></td>
+                <td><div class="row-actions"><button class="btn btn-ghost btn-sm">Reschedule</button><button class="btn btn-ghost btn-sm">Cancel</button></div></td>
+              </tr>
+            </tbody>
+          </table>
+          <div class="tfoot"><span>Showing 8 of 14 upcoming</span><div style="display:flex;gap:var(--space-2)"><button class="btn btn-outline btn-sm" disabled>Previous</button><button class="btn btn-outline btn-sm">Next</button></div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="overlay" id="dialog">
+    <div class="card dialog" role="dialog" aria-labelledby="dlg-title">
+      <h2 id="dlg-title">Reschedule appointment</h2>
+      <div class="current"><strong>Andrea Lim</strong> · currently Wed, Oct 7 at 10:30 AM</div>
+      <form onsubmit="return false">
+        <div class="two">
+          <div class="field"><label class="label" for="d">New date</label><input class="input" id="d" type="date" value="2026-10-12"></div>
+          <div class="field">
+            <label class="label" for="t">New time</label>
+            <select class="select" id="t"><option>9:00 AM</option><option selected>10:30 AM</option><option>11:00 AM</option><option>1:30 PM</option></select>
+          </div>
+        </div>
+        <span class="hint">Only open slots are listed. Asia/Manila (GMT+8).</span>
+        <label class="check-row"><input type="checkbox" checked> Email Andrea about the new time</label>
+        <div class="foot">
+          <button class="btn btn-outline" type="button" onclick="document.getElementById('dialog').hidden = true">Keep current time</button>
+          <button class="btn btn-primary">Reschedule</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <button class="btn btn-outline btn-sm theme-toggle" onclick="document.documentElement.dataset.theme = document.documentElement.dataset.theme === 'dark' ? '' : 'dark'">Toggle dark</button>
+</body>
+</html>

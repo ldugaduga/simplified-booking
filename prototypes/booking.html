@@ -1,0 +1,168 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Book a time - Mockup</title>
+  <link rel="stylesheet" href="theme.css">
+  <style>
+    .page { min-height: 100vh; display: grid; place-items: center; padding: var(--space-6) var(--space-4); }
+    .booking { display: grid; grid-template-columns: 280px 1fr 220px; width: 100%; max-width: 1000px; overflow: hidden; }
+    .booking > section { padding: var(--space-5); }
+    .booking > section + section { border-left: 1px solid var(--border); }
+
+    .host { display: flex; align-items: center; gap: var(--space-3); margin-bottom: var(--space-5); }
+    .avatar { width: 40px; height: 40px; border-radius: var(--radius); background: var(--accent); color: var(--accent-ink); display: grid; place-items: center; font-weight: 600; }
+    .event-title { font-size: var(--text-lg); margin-bottom: var(--space-4); }
+    .meta { display: grid; gap: var(--space-3); color: var(--muted); }
+    .meta div { display: flex; align-items: center; gap: var(--space-2); }
+    .meta svg { width: 16px; height: 16px; flex: none; }
+    .desc { margin-top: var(--space-5); padding-top: var(--space-5); border-top: 1px solid var(--border); color: var(--muted); font-size: var(--text-sm); }
+
+    .cal-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: var(--space-4); }
+    .cal-head h2 { font-size: var(--text-md); }
+    .cal-nav { display: flex; gap: var(--space-1); }
+    .icon-btn { width: 32px; height: 32px; display: grid; place-items: center; border: 1px solid var(--border); border-radius: var(--radius); background: var(--surface); color: var(--text); cursor: pointer; }
+    .icon-btn:disabled { color: var(--faint); cursor: default; }
+    .grid { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: var(--space-1); }
+    .dow { text-align: center; font-size: var(--text-xs); font-weight: 500; color: var(--muted); text-transform: uppercase; letter-spacing: 0.04em; padding-bottom: var(--space-2); }
+    .day { aspect-ratio: 1; display: grid; place-items: center; border-radius: var(--radius); font-size: var(--text-base); border: 0; background: transparent; font-family: inherit; position: relative; }
+    .day.available { background: var(--day-available-bg); color: var(--day-available-ink); font-weight: 600; cursor: pointer; }
+    .day.available:hover { outline: 1px solid var(--accent); }
+    .day.selected { background: var(--day-selected-bg); color: var(--day-selected-ink); font-weight: 600; }
+    .day.unavailable { color: var(--day-unavailable-ink); }
+    .day.blocked { color: var(--day-blocked-ink); text-decoration: line-through; }
+    .day.today::after { content: ""; position: absolute; bottom: 6px; width: 4px; height: 4px; border-radius: 50%; background: currentColor; }
+    .legend { display: flex; gap: var(--space-4); margin-top: var(--space-4); font-size: var(--text-xs); color: var(--muted); }
+    .legend span { display: inline-flex; align-items: center; gap: 6px; }
+    .swatch { width: 10px; height: 10px; border-radius: 2px; }
+    .tz { margin-top: var(--space-5); display: grid; gap: 6px; }
+
+    .slots-head { font-size: var(--text-base); margin-bottom: var(--space-4); }
+    .slots-head span { color: var(--muted); font-weight: 400; }
+    .slots { display: grid; gap: var(--space-2); max-height: 420px; overflow-y: auto; padding-right: 2px; }
+    .slot { height: 40px; border: 1px solid var(--slot-border); border-radius: var(--radius); background: var(--surface); color: var(--slot-ink); font: 600 var(--text-base) / 1 var(--font-sans); cursor: pointer; }
+    .slot:hover { border-color: var(--accent); border-width: 2px; }
+    .slot-picked { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-2); }
+    .slot-picked .chosen { height: 40px; display: grid; place-items: center; border-radius: var(--radius); background: var(--surface-2); color: var(--text); font-weight: 600; }
+    .slot-picked .btn { height: 40px; }
+    @media (max-width: 860px) {
+      .booking { grid-template-columns: minmax(0, 1fr); }
+      .booking > section { padding: var(--space-4); }
+      .legend { flex-wrap: wrap; gap: var(--space-2) var(--space-4); }
+      .tz .select { max-width: none !important; }
+      .booking > section + section { border-left: 0; border-top: 1px solid var(--border); }
+      .slots { max-height: none; }
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <main class="card booking">
+      <section>
+        <div class="host">
+          <div class="avatar">NC</div>
+          <div>
+            <div style="font-weight:600">Northgate Consulting</div>
+            <div class="muted" style="font-size:var(--text-sm)">Maria Santos</div>
+          </div>
+        </div>
+        <h1 class="event-title">30-minute consultation</h1>
+        <div class="meta">
+          <div>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
+            30 min
+          </div>
+          <div>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="5" width="13" height="14" rx="2"/><path d="m16 10 5-3v10l-5-3"/></svg>
+            Video call, link sent after booking
+          </div>
+          <div>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18"/></svg>
+            Asia/Manila (GMT+8)
+          </div>
+        </div>
+        <p class="desc">A short call to understand your needs and see whether we are a good fit. Bring any questions you have.</p>
+      </section>
+
+      <section>
+        <div class="cal-head">
+          <h2>October 2026</h2>
+          <div class="cal-nav">
+            <button class="icon-btn" disabled aria-label="Previous month">&#8249;</button>
+            <button class="icon-btn" aria-label="Next month">&#8250;</button>
+          </div>
+        </div>
+        <div class="grid">
+          <div class="dow">Sun</div><div class="dow">Mon</div><div class="dow">Tue</div><div class="dow">Wed</div><div class="dow">Thu</div><div class="dow">Fri</div><div class="dow">Sat</div>
+          <div></div><div></div><div></div><div></div>
+          <button class="day unavailable">1</button>
+          <button class="day unavailable">2</button>
+          <button class="day unavailable">3</button>
+          <button class="day unavailable">4</button>
+          <button class="day unavailable">5</button>
+          <button class="day unavailable">6</button>
+          <button class="day unavailable today">7</button>
+          <button class="day available">8</button>
+          <button class="day unavailable" title="Fully booked">9</button>
+          <button class="day unavailable">10</button>
+          <button class="day unavailable">11</button>
+          <button class="day available">12</button>
+          <button class="day available">13</button>
+          <button class="day selected">14</button>
+          <button class="day available">15</button>
+          <button class="day available">16</button>
+          <button class="day unavailable">17</button>
+          <button class="day unavailable">18</button>
+          <button class="day available">19</button>
+          <button class="day available">20</button>
+          <button class="day available">21</button>
+          <button class="day available">22</button>
+          <button class="day blocked" title="Unavailable: holiday">23</button>
+          <button class="day unavailable">24</button>
+          <button class="day unavailable">25</button>
+          <button class="day available">26</button>
+          <button class="day available">27</button>
+          <button class="day available">28</button>
+          <button class="day available">29</button>
+          <button class="day available">30</button>
+          <button class="day unavailable">31</button>
+        </div>
+        <div class="legend">
+          <span><i class="swatch" style="background:var(--day-available-bg)"></i>Available</span>
+          <span><i class="swatch" style="background:var(--day-selected-bg)"></i>Selected</span>
+          <span><i class="swatch" style="background:var(--surface-2)"></i>Unavailable</span>
+        </div>
+        <div class="tz">
+          <label class="label" for="tz">Times shown in</label>
+          <select id="tz" class="select" style="max-width:280px">
+            <option>Asia/Manila (GMT+8) - detected</option>
+            <option>Asia/Singapore (GMT+8)</option>
+            <option>America/Los_Angeles (GMT-7)</option>
+          </select>
+        </div>
+      </section>
+
+      <section>
+        <h3 class="slots-head">Wed, Oct 14 <span>- 9 open</span></h3>
+        <div class="slots">
+          <button class="slot">9:00 AM</button>
+          <button class="slot">9:30 AM</button>
+          <div class="slot-picked">
+            <div class="chosen">10:30 AM</div>
+            <a class="btn btn-primary" href="booking-form.html">Next</a>
+          </div>
+          <button class="slot">11:00 AM</button>
+          <button class="slot">1:00 PM</button>
+          <button class="slot">1:30 PM</button>
+          <button class="slot">2:30 PM</button>
+          <button class="slot">3:30 PM</button>
+          <button class="slot">4:00 PM</button>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <button class="btn btn-outline btn-sm theme-toggle" onclick="document.documentElement.dataset.theme = document.documentElement.dataset.theme === 'dark' ? '' : 'dark'">Toggle dark</button>
+</body>
+</html>

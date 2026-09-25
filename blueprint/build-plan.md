@@ -13,7 +13,7 @@ their archived specs refer to those IDs.
 - [x] 4. **Public booking flow** - month calendar, open times in the visitor's timezone, booking form, confirmation page; transactional slot check, rate limit, and honeypot field
 - [x] 5. **Admin appointments** - dashboard list with date and status filters; admin create, reschedule, and cancel
 - [x] 6. **Confirmation email** - queued email to the visitor with an `.ics` invite, sent on booking, reschedule, and cancel
-- [ ] 7. **Production readiness** - production `.env` template, security settings (HTTPS, secure cookies, debug off), and a VPS deploy checklist with queue worker and cron
+- [x] 7. **Production readiness** - production `.env` template, security settings (HTTPS, secure cookies, debug off), and a VPS deploy checklist with queue worker and cron
 
 ## Phase 2 - quality of life
 

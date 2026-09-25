@@ -15,10 +15,10 @@
 **Suggested fix:** Validate with a real two-process concurrency test or manual check. If confirmed, set a non-zero SQLite `busy_timeout` (and consider `transaction_mode` IMMEDIATE / WAL) so the second writer waits and then hits the unique index, or also map the lock `QueryException` to the same `start_at` error.
 **Resolution:**
 
-### F-04 [P2] unverified - Per-IP limits depend on proxy configuration that is not set
+### F-05 [P2] open - ProductionUrlSchemeTest is not hermetic; it depends on the ambient project `.env`
 
-**File:** app/Http/Requests/StoreBookingRequest.php:47
-**Found:** 2026-09-24 by /audit independent (scope: current; lens: security)
-**Why it matters:** The booking limiter keys on `$this->ip()` and `/slots` uses `throttle:60,1` (routes/web.php:10), which also keys on IP. bootstrap/app.php configures no trusted proxies. Behind a reverse proxy or load balancer (for example a Render or Vercel style deployment), every visitor may share the proxy address, so 5 bookings per 10 minutes and 60 slot fetches per minute would apply site-wide. Trusting all proxies would instead let clients spoof `X-Forwarded-For` and bypass the limit. Deployment is not configured yet, so this is a lead, not a confirmed defect.
-**Suggested fix:** When the deployment target is chosen (`/release`), configure `$middleware->trustProxies(at: ...)` for that platform's proxy range only, and confirm `request()->ip()` returns the client address.
-**Resolution:**
+**File:** tests/Feature/ProductionUrlSchemeTest.php:11
+**Found:** 2026-09-25 by /audit current (scope: current; lens: tests)
+**Why it matters:** Unlike the rest of the suite, which runs in-process against the testing kernel with `RefreshDatabase`, this test spawns a real `php artisan tinker` subprocess and only overrides `APP_ENV`, `APP_URL`, `APP_KEY`, and `DB_*`. Every other setting (mail, session, queue, cache, business settings) is read from whatever real `.env` file happens to exist on disk at `base_path()`. A fresh clone has no `.env` until `cp .env.example .env` runs, so this test would fail there with an opaque subprocess/tinker error instead of a clear setup message, and it is not isolated from developer-machine or CI-runner environment drift the way the rest of the suite is.
+**Suggested fix:** Either skip this test when `.env` is absent with an explicit message, or pass a minimal explicit env set (including `SESSION_DRIVER=array`, `CACHE_STORE=array`, `MAIL_MAILER=array`, `QUEUE_CONNECTION=sync`, matching `phpunit.xml`) so the subprocess does not depend on the ambient file at all.
+**Resolution:** Re-examined 2026-09-25 by `/audit independent current` (scope: current; lens: quality, security, performance, tests): confirmed still present and unrepaired; left `open` at P2 (does not block this receipt).

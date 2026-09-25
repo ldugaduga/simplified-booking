@@ -19,7 +19,7 @@ class AppointmentRescheduled extends AppointmentMailable
     {
         return new Content(
             view: 'emails.appointment-rescheduled',
-            with: ['when' => $this->formattedWhen(), 'minutes' => $this->minutes()],
+            with: ['when' => $this->formattedWhen(), 'minutes' => $this->minutes(), 'businessName' => $this->businessName()],
         );
     }
 

@@ -10,6 +10,7 @@ import { computed, nextTick, onMounted, ref, watch } from 'vue';
 
 interface Props {
     businessName: string;
+    businessDescription: string | null;
     slotMinutes: number;
     maxDaysAhead: number;
 }
@@ -85,6 +86,7 @@ const monthName = computed(() =>
 
 // Slots for the visible month.
 const slots = ref<string[]>([]);
+const taken = ref<string[]>([]);
 const loading = ref(false);
 const loadError = ref(false);
 let requestId = 0;
@@ -102,26 +104,31 @@ const loadSlots = async () => {
         const query = new URLSearchParams({ start: start.toISOString(), end: end.toISOString() });
         const response = await fetch(`${route('booking.slots')}?${query}`, { headers: { Accept: 'application/json' } });
         if (!response.ok) throw new Error(`HTTP ${response.status}`);
-        const body: { slots: string[] } = await response.json();
+        const body: { slots: string[]; taken: string[] } = await response.json();
         if (id !== requestId) return;
         slots.value = body.slots;
+        taken.value = body.taken;
     } catch {
         if (id !== requestId) return;
         slots.value = [];
+        taken.value = [];
         loadError.value = true;
     } finally {
         if (id === requestId) loading.value = false;
     }
 };
 
-const slotsByDate = computed(() => {
+const groupByDate = (instants: string[]) => {
     const groups = new Map<string, string[]>();
-    for (const slot of slots.value) {
-        const date = localDate(new Date(slot), timezone.value);
-        groups.set(date, [...(groups.get(date) ?? []), slot]);
+    for (const instant of instants) {
+        const date = localDate(new Date(instant), timezone.value);
+        groups.set(date, [...(groups.get(date) ?? []), instant]);
     }
     return groups;
-});
+};
+
+const slotsByDate = computed(() => groupByDate(slots.value));
+const takenByDate = computed(() => groupByDate(taken.value));
 
 const selectedDate = ref<string | null>(null);
 const pickedSlot = ref<string | null>(null);
@@ -180,7 +187,20 @@ const selectedDayLabel = computed(() => {
         new Date(Date.UTC(y, m - 1, d)),
     );
 });
-const dayTimes = computed(() => (selectedDate.value ? (slotsByDate.value.get(selectedDate.value) ?? []) : []));
+interface TimeEntry {
+    time: string;
+    available: boolean;
+}
+
+// The selected day's open times plus any taken times, merged and sorted so a booked
+// time shows as disabled in place rather than disappearing from the list.
+const dayTimes = computed<TimeEntry[]>(() => {
+    if (!selectedDate.value) return [];
+    const open = (slotsByDate.value.get(selectedDate.value) ?? []).map((time) => ({ time, available: true }));
+    const busy = (takenByDate.value.get(selectedDate.value) ?? []).map((time) => ({ time, available: false }));
+    return [...open, ...busy].sort((a, b) => a.time.localeCompare(b.time));
+});
+const openCount = computed(() => slotsByDate.value.get(selectedDate.value ?? '')?.length ?? 0);
 
 // Details step.
 const step = ref<'times' | 'details'>('times');
@@ -241,6 +261,7 @@ const submit = () => {
                     </div>
                     <p class="font-semibold">{{ businessName }}</p>
                 </div>
+                <p v-if="businessDescription" class="mb-4 text-sm text-muted-foreground">{{ businessDescription }}</p>
                 <h1 class="mb-4 text-xl font-semibold tracking-tight">{{ slotMinutes }}-minute meeting</h1>
                 <div class="grid gap-3 text-sm text-muted-foreground">
                     <p class="flex items-center gap-2"><Clock class="h-4 w-4 shrink-0" />{{ slotMinutes }} min</p>
@@ -350,21 +371,34 @@ const submit = () => {
 
                 <template v-else-if="selectedDate">
                     <h3 class="mb-4 text-sm font-semibold">
-                        {{ selectedDayLabel }} <span class="font-normal text-muted-foreground">- {{ dayTimes.length }} open</span>
+                        {{ selectedDayLabel }} <span class="font-normal text-muted-foreground">- {{ openCount }} open</span>
                     </h3>
                     <ul class="grid max-h-[420px] gap-2 overflow-y-auto pr-0.5">
-                        <li v-for="slot in dayTimes" :key="slot">
-                            <div v-if="slot === pickedSlot" class="grid grid-cols-2 gap-2">
-                                <span class="grid h-10 place-items-center rounded-md bg-muted text-sm font-semibold">{{ timeLabel(slot) }}</span>
+                        <li v-for="entry in dayTimes" :key="entry.time">
+                            <div v-if="entry.time === pickedSlot" class="grid grid-cols-2 gap-2">
+                                <span class="grid h-10 place-items-center rounded-md bg-muted text-sm font-semibold">{{
+                                    timeLabel(entry.time)
+                                }}</span>
                                 <Button class="h-10" @click="goToDetails">Next</Button>
                             </div>
                             <button
-                                v-else
+                                v-else-if="entry.available"
                                 type="button"
                                 class="h-10 w-full rounded-md border border-primary/40 bg-card text-sm font-semibold text-primary transition-colors hover:border-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                                @click="pickedSlot = slot"
+                                @click="pickedSlot = entry.time"
                             >
-                                {{ timeLabel(slot) }}
+                                {{ timeLabel(entry.time) }}
+                            </button>
+                            <button
+                                v-else
+                                type="button"
+                                disabled
+                                aria-disabled="true"
+                                :aria-label="`${timeLabel(entry.time)}, already booked`"
+                                title="Already booked"
+                                class="h-10 w-full cursor-not-allowed rounded-md border border-border bg-muted text-sm font-semibold text-muted-foreground line-through"
+                            >
+                                {{ timeLabel(entry.time) }}
                             </button>
                         </li>
                     </ul>

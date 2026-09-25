@@ -32,6 +32,11 @@ abstract class AppointmentMailable extends Mailable implements ShouldQueue
         return (int) $this->appointment->start_at->diffInMinutes($this->appointment->end_at);
     }
 
+    protected function businessName(): string
+    {
+        return Setting::current()->business_name ?: config('app.name');
+    }
+
     /**
      * @return array<int, Attachment>
      */

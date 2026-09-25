@@ -19,7 +19,7 @@ class AppointmentCancelled extends AppointmentMailable
     {
         return new Content(
             view: 'emails.appointment-cancelled',
-            with: ['when' => $this->formattedWhen(), 'minutes' => $this->minutes()],
+            with: ['when' => $this->formattedWhen(), 'minutes' => $this->minutes(), 'businessName' => $this->businessName()],
         );
     }
 

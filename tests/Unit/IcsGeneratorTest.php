@@ -4,6 +4,7 @@ namespace Tests\Unit;
 
 use App\Enums\AppointmentStatus;
 use App\Models\Appointment;
+use App\Models\Setting;
 use App\Services\IcsGenerator;
 use Carbon\CarbonImmutable;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -78,5 +79,15 @@ class IcsGeneratorTest extends TestCase
         $ics = (new IcsGenerator)->forAppointment($appointment, 'REQUEST');
 
         $this->assertStringContainsString('SUMMARY:30-minute meeting with Simplified\\, Booking', $ics);
+    }
+
+    public function test_a_configured_business_name_overrides_the_app_name()
+    {
+        Setting::current()->update(['business_name' => 'Northgate Consulting']);
+        $appointment = Appointment::factory()->create(['status' => AppointmentStatus::Confirmed]);
+
+        $ics = (new IcsGenerator)->forAppointment($appointment, 'REQUEST');
+
+        $this->assertStringContainsString('SUMMARY:30-minute meeting with Northgate Consulting', $ics);
     }
 }

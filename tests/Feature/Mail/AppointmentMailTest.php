@@ -6,6 +6,7 @@ use App\Mail\AppointmentBooked;
 use App\Mail\AppointmentCancelled;
 use App\Mail\AppointmentRescheduled;
 use App\Models\Appointment;
+use App\Models\Setting;
 use Carbon\CarbonImmutable;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Mail\Mailable;
@@ -67,6 +68,21 @@ class AppointmentMailTest extends TestCase
         $rendered = $mail->render();
         $this->assertStringContainsString(config('app.name'), $rendered);
         $this->assertStringNotContainsString($appointment->manage_token, $rendered);
+    }
+
+    public function test_each_mail_shows_the_configured_business_name_and_falls_back_without_it()
+    {
+        $appointment = $this->appointment();
+
+        $this->assertStringContainsString(config('app.name'), (new AppointmentBooked($appointment))->render());
+        $this->assertStringContainsString(config('app.name'), (new AppointmentRescheduled($appointment))->render());
+        $this->assertStringContainsString(config('app.name'), (new AppointmentCancelled($appointment))->render());
+
+        Setting::current()->update(['business_name' => 'Northgate Consulting']);
+
+        $this->assertStringContainsString('Northgate Consulting', (new AppointmentBooked($appointment))->render());
+        $this->assertStringContainsString('Northgate Consulting', (new AppointmentRescheduled($appointment))->render());
+        $this->assertStringContainsString('Northgate Consulting', (new AppointmentCancelled($appointment))->render());
     }
 
     private function appointment(): Appointment

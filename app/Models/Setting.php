@@ -13,6 +13,8 @@ class Setting extends Model
      */
     protected $fillable = [
         'timezone',
+        'business_name',
+        'business_description',
         'slot_minutes',
         'buffer_minutes',
         'min_notice_hours',

@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\Appointment;
+use App\Models\Setting;
 use Illuminate\Support\Carbon;
 
 class IcsGenerator
@@ -37,8 +38,9 @@ class IcsGenerator
     private function summary(Appointment $appointment): string
     {
         $minutes = (int) $appointment->start_at->diffInMinutes($appointment->end_at);
+        $businessName = Setting::current()->business_name ?: config('app.name');
 
-        return "{$minutes}-minute meeting with ".config('app.name');
+        return "{$minutes}-minute meeting with {$businessName}";
     }
 
     /**

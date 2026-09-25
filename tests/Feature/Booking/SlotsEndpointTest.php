@@ -64,6 +64,30 @@ class SlotsEndpointTest extends TestCase
         $this->assertStringNotContainsString('private@example.com', $response->getContent());
     }
 
+    public function test_booked_slots_appear_taken_and_blocked_dates_appear_in_neither_list()
+    {
+        Appointment::factory()->create([
+            'start_at' => '2030-01-07 02:00:00',
+            'end_at' => '2030-01-07 02:30:00',
+            'name' => 'Private Person',
+            'email' => 'private@example.com',
+        ]);
+        BlockedDate::create(['date' => '2030-01-08']);
+
+        $response = $this->getJson('/slots?start=2030-01-06T16:00:00Z&end=2030-01-08T16:00:00Z')->assertOk();
+
+        $taken = $response->json('taken');
+        $this->assertContains('2030-01-07T02:00:00Z', $taken);
+        $this->assertCount(1, $taken);
+        $this->assertStringNotContainsString('Private Person', $response->getContent());
+        $this->assertStringNotContainsString('private@example.com', $response->getContent());
+
+        // Nothing for the blocked date, 2030-01-08, in either list.
+        $blockedDayInstants = collect(array_merge($response->json('slots'), $taken))
+            ->filter(fn (string $instant) => str_starts_with($instant, '2030-01-08'));
+        $this->assertCount(0, $blockedDayInstants);
+    }
+
     public function test_invalid_windows_are_rejected()
     {
         $this->getJson('/slots')->assertStatus(422)->assertJsonValidationErrors(['start', 'end']);

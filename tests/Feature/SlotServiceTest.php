@@ -200,6 +200,55 @@ class SlotServiceTest extends TestCase
         $this->assertNotContains('13:30', $local);
     }
 
+    public function test_a_booked_slot_appears_in_taken_and_not_available()
+    {
+        $this->appointment('2030-01-07 10:00', '2030-01-07 10:30');
+
+        $this->assertContains('2030-01-07 10:00', $this->takenOn('2030-01-07', 'Asia/Manila'));
+        $this->assertNotContains('2030-01-07 10:00', $this->slotsOn('2030-01-07', 'Asia/Manila'));
+    }
+
+    public function test_slots_outside_the_grid_appear_in_neither_list()
+    {
+        BlockedDate::create(['date' => '2030-01-08']);
+
+        // Before the minimum notice window.
+        Setting::current()->update(['min_notice_hours' => 4]);
+        $this->travelTo(CarbonImmutable::parse('2030-01-07 09:10', 'Asia/Manila'));
+        $this->assertNotContains('2030-01-07 09:00', $this->takenOn('2030-01-07'));
+        $this->assertNotContains('2030-01-07 09:00', $this->slotsOn('2030-01-07'));
+
+        // Blocked date.
+        $this->assertEmpty($this->takenOn('2030-01-08'));
+        $this->assertEmpty($this->slotsOn('2030-01-08'));
+
+        // Beyond the booking window.
+        Setting::current()->update(['max_days_ahead' => 2]);
+        $this->assertEmpty($this->takenOn('2030-01-20'));
+        $this->assertEmpty($this->slotsOn('2030-01-20'));
+    }
+
+    public function test_buffer_widens_taken_the_same_way_it_widens_available()
+    {
+        Setting::current()->update(['buffer_minutes' => 15]);
+        $this->appointment('2030-01-07 10:00', '2030-01-07 10:30');
+
+        $taken = $this->takenOn('2030-01-07', 'Asia/Manila');
+        $this->assertContains('2030-01-07 09:30', $taken);
+        $this->assertContains('2030-01-07 10:00', $taken);
+        $this->assertContains('2030-01-07 10:30', $taken);
+        $this->assertNotContains('2030-01-07 09:00', $taken);
+        $this->assertNotContains('2030-01-07 11:00', $taken);
+    }
+
+    public function test_a_cancelled_appointments_slot_is_available_not_taken()
+    {
+        $this->appointment('2030-01-07 10:00', '2030-01-07 10:30', AppointmentStatus::Cancelled);
+
+        $this->assertContains('2030-01-07 10:00', $this->slotsOn('2030-01-07', 'Asia/Manila'));
+        $this->assertNotContains('2030-01-07 10:00', $this->takenOn('2030-01-07', 'Asia/Manila'));
+    }
+
     private function rule(int $weekday, string $start, string $end): void
     {
         AvailabilityRule::create(['weekday' => $weekday, 'start_time' => $start, 'end_time' => $end]);
@@ -226,6 +275,22 @@ class SlotServiceTest extends TestCase
 
         return app(SlotService::class)
             ->availableSlots($from, $from->addDay())
+            ->map(fn (CarbonImmutable $slot) => $slot->setTimezone($displayTz)->format('Y-m-d H:i'))
+            ->values();
+    }
+
+    /**
+     * Taken slots for one local calendar day, formatted in $displayTz.
+     *
+     * @return Collection<int, string>
+     */
+    private function takenOn(string $date, string $displayTz = 'UTC', ?string $dayTz = null)
+    {
+        $dayTz ??= Setting::current()->timezone;
+        $from = CarbonImmutable::parse($date, $dayTz)->startOfDay();
+
+        return app(SlotService::class)
+            ->takenSlots($from, $from->addDay())
             ->map(fn (CarbonImmutable $slot) => $slot->setTimezone($displayTz)->format('Y-m-d H:i'))
             ->values();
     }

@@ -42,7 +42,8 @@ class BookingController extends Controller
         $settings = Setting::current();
 
         return Inertia::render('booking/Book', [
-            'businessName' => config('app.name'),
+            'businessName' => $settings->business_name ?: config('app.name'),
+            'businessDescription' => $settings->business_description,
             'slotMinutes' => $settings->slot_minutes,
             'maxDaysAhead' => $settings->max_days_ahead,
         ]);
@@ -69,6 +70,9 @@ class BookingController extends Controller
 
         return response()->json([
             'slots' => $this->slots->availableSlots($start, $end)
+                ->map(fn (CarbonImmutable $slot) => $slot->format('Y-m-d\TH:i:s\Z'))
+                ->values(),
+            'taken' => $this->slots->takenSlots($start, $end)
                 ->map(fn (CarbonImmutable $slot) => $slot->format('Y-m-d\TH:i:s\Z'))
                 ->values(),
         ]);
@@ -118,7 +122,7 @@ class BookingController extends Controller
             'start_at' => $appointment->start_at->utc()->format('Y-m-d\TH:i:s\Z'),
             'end_at' => $appointment->end_at->utc()->format('Y-m-d\TH:i:s\Z'),
             'slotMinutes' => $appointment->start_at->diffInMinutes($appointment->end_at),
-            'businessName' => config('app.name'),
+            'businessName' => Setting::current()->business_name ?: config('app.name'),
         ]);
     }
 

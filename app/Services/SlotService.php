@@ -25,6 +25,41 @@ class SlotService
         bool $ignoreMinimumNotice = false,
         ?int $exceptAppointmentId = null,
     ): Collection {
+        return $this->candidates($from, $to, $ignoreMinimumNotice, $exceptAppointmentId)
+            ->filter(fn (array $candidate) => $candidate['available'])
+            ->pluck('start')
+            ->values();
+    }
+
+    /**
+     * Grid slot start times (UTC) in [$from, $to), ascending, that clash with an active
+     * appointment. These are within working hours, not blocked, and inside the booking
+     * window, exactly like `availableSlots()`, but taken rather than open. Used to show
+     * a booked time as unavailable on the public page instead of omitting it.
+     *
+     * @return Collection<int, CarbonImmutable>
+     */
+    public function takenSlots(CarbonImmutable $from, CarbonImmutable $to): Collection
+    {
+        return $this->candidates($from, $to, ignoreMinimumNotice: false, exceptAppointmentId: null)
+            ->reject(fn (array $candidate) => $candidate['available'])
+            ->pluck('start')
+            ->values();
+    }
+
+    /**
+     * Every grid slot in [$from, $to) that passes the working-hours, blocked-date,
+     * minimum-notice, and booking-window filters, each tagged with whether it clashes
+     * with an active appointment.
+     *
+     * @return Collection<int, array{start: CarbonImmutable, available: bool}>
+     */
+    private function candidates(
+        CarbonImmutable $from,
+        CarbonImmutable $to,
+        bool $ignoreMinimumNotice,
+        ?int $exceptAppointmentId,
+    ): Collection {
         $from = $from->utc();
         $to = $to->utc();
 
@@ -59,7 +94,7 @@ class SlotService
             ->when($exceptAppointmentId, fn ($query) => $query->whereKeyNot($exceptAppointmentId))
             ->get(['start_at', 'end_at']);
 
-        $slots = collect();
+        $candidates = collect();
 
         for ($day = $firstDay; $day <= $lastDay; $day = $day->addDay()) {
             $date = $day->toDateString();
@@ -92,14 +127,12 @@ class SlotService
                     $clashes = $appointments->contains(fn (Appointment $a) => $a->start_at->subMinutes($buffer) < $end
                         && $a->end_at->addMinutes($buffer) > $start);
 
-                    if (! $clashes) {
-                        $slots->push($start);
-                    }
+                    $candidates->push(['start' => $start, 'available' => ! $clashes]);
                 }
             }
         }
 
-        return $slots->unique(fn (CarbonImmutable $slot) => $slot->timestamp)->sort()->values();
+        return $candidates->unique(fn (array $candidate) => $candidate['start']->timestamp)->sortBy(fn (array $candidate) => $candidate['start']->timestamp)->values();
     }
 
     private function minutesOf(string $time): int

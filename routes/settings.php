@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Settings\BrandingController;
 use App\Http\Controllers\Settings\PasswordController;
 use App\Http\Controllers\Settings\ProfileController;
 use Illuminate\Support\Facades\Route;
@@ -13,6 +14,9 @@ Route::middleware('auth')->group(function () {
 
     Route::get('settings/password', [PasswordController::class, 'edit'])->name('password.edit');
     Route::put('settings/password', [PasswordController::class, 'update'])->name('password.update');
+
+    Route::get('settings/branding', [BrandingController::class, 'edit'])->name('branding.edit');
+    Route::patch('settings/branding', [BrandingController::class, 'update'])->name('branding.update');
 
     Route::get('settings/appearance', function () {
         return Inertia::render('settings/Appearance');

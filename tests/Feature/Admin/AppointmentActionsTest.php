@@ -3,6 +3,9 @@
 namespace Tests\Feature\Admin;
 
 use App\Enums\AppointmentStatus;
+use App\Mail\AppointmentBooked;
+use App\Mail\AppointmentCancelled;
+use App\Mail\AppointmentRescheduled;
 use App\Models\Appointment;
 use App\Models\AvailabilityRule;
 use App\Models\BlockedDate;
@@ -11,6 +14,7 @@ use App\Models\User;
 use App\Services\SlotService;
 use Carbon\CarbonImmutable;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Mail;
 use Tests\TestCase;
 
 class AppointmentActionsTest extends TestCase
@@ -53,6 +57,8 @@ class AppointmentActionsTest extends TestCase
 
     public function test_admin_can_book_inside_the_notice_window()
     {
+        Mail::fake();
+
         $this->actingAs($this->admin)
             ->post('/admin/appointments', $this->payload('2030-01-07 10:00'))
             ->assertSessionHasNoErrors()
@@ -62,6 +68,7 @@ class AppointmentActionsTest extends TestCase
         $this->assertSame($this->admin->id, $appointment->created_by);
         $this->assertSame(AppointmentStatus::Confirmed, $appointment->status);
         $this->assertSame(30, (int) $appointment->start_at->diffInMinutes($appointment->end_at));
+        Mail::assertQueued(AppointmentBooked::class, fn (AppointmentBooked $mail) => $mail->hasTo($appointment->email));
     }
 
     public function test_admin_booking_still_respects_the_other_rules()
@@ -96,6 +103,8 @@ class AppointmentActionsTest extends TestCase
 
     public function test_reschedule_moves_the_appointment_and_frees_the_old_slot()
     {
+        Mail::fake();
+
         $appointment = $this->make('2030-01-07 10:00', 45);
 
         $this->actingAs($this->admin)
@@ -109,6 +118,7 @@ class AppointmentActionsTest extends TestCase
 
         $slots = $this->actingAs($this->admin)->getJson('/admin/slots?date=2030-01-07')->json('slots');
         $this->assertContains($this->utc('2030-01-07 10:00'), $slots);
+        Mail::assertQueued(AppointmentRescheduled::class, fn (AppointmentRescheduled $mail) => $mail->hasTo($appointment->email));
     }
 
     public function test_reschedule_to_its_own_slot_succeeds()
@@ -156,10 +166,16 @@ class AppointmentActionsTest extends TestCase
 
     public function test_cancel_frees_the_slot_and_is_idempotent()
     {
+        Mail::fake();
+
         $appointment = $this->make('2030-01-08 14:00');
 
         $this->actingAs($this->admin)->patch("/admin/appointments/{$appointment->id}/cancel")->assertRedirect();
+        Mail::assertQueued(AppointmentCancelled::class, fn (AppointmentCancelled $mail) => $mail->hasTo($appointment->email));
+
+        Mail::fake();
         $this->actingAs($this->admin)->patch("/admin/appointments/{$appointment->id}/cancel")->assertRedirect();
+        Mail::assertNothingQueued();
 
         $appointment->refresh();
         $this->assertSame(AppointmentStatus::Cancelled, $appointment->status);

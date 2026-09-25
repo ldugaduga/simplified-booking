@@ -7,6 +7,9 @@ use App\Http\Controllers\BookingController;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\RescheduleAppointmentRequest;
 use App\Http\Requests\Admin\StoreAppointmentRequest;
+use App\Mail\AppointmentBooked;
+use App\Mail\AppointmentCancelled;
+use App\Mail\AppointmentRescheduled;
 use App\Models\Appointment;
 use App\Models\Setting;
 use App\Services\SlotService;
@@ -17,6 +20,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -105,11 +109,12 @@ class AppointmentController extends Controller
     {
         $start = CarbonImmutable::parse($request->validated('start_at'))->utc();
         $length = Setting::current()->slot_minutes;
+        $appointment = null;
 
-        $this->guardSlot(function () use ($request, $start, $length) {
+        $this->guardSlot(function () use ($request, $start, $length, &$appointment) {
             $this->ensureOpen($start);
 
-            Appointment::create([
+            $appointment = Appointment::create([
                 'start_at' => $start,
                 'end_at' => $start->addMinutes($length),
                 'status' => AppointmentStatus::Confirmed,
@@ -119,6 +124,8 @@ class AppointmentController extends Controller
                 'created_by' => $request->user()->id,
             ]);
         });
+
+        Mail::to($appointment->email)->queue(new AppointmentBooked($appointment));
 
         return back();
     }
@@ -158,6 +165,8 @@ class AppointmentController extends Controller
             ]);
         });
 
+        Mail::to($appointment->email)->queue(new AppointmentRescheduled($appointment));
+
         return back();
     }
 
@@ -168,6 +177,8 @@ class AppointmentController extends Controller
     {
         if ($appointment->status->isActive()) {
             $appointment->update(['status' => AppointmentStatus::Cancelled]);
+
+            Mail::to($appointment->email)->queue(new AppointmentCancelled($appointment));
         }
 
         return back();

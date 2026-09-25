@@ -3,6 +3,7 @@
 namespace Tests\Feature\Booking;
 
 use App\Enums\AppointmentStatus;
+use App\Mail\AppointmentBooked;
 use App\Models\Appointment;
 use App\Models\AvailabilityRule;
 use App\Models\BlockedDate;
@@ -10,6 +11,7 @@ use App\Models\Setting;
 use App\Services\SlotService;
 use Carbon\CarbonImmutable;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\URL;
 use Inertia\Testing\AssertableInertia as Assert;
 use Tests\TestCase;
@@ -34,9 +36,13 @@ class BookAppointmentTest extends TestCase
 
     public function test_visitor_can_book_an_open_slot()
     {
+        Mail::fake();
+
         $response = $this->post('/book', $this->payload());
 
         $appointment = Appointment::sole();
+        Mail::assertQueued(AppointmentBooked::class, fn (AppointmentBooked $mail) => $mail->hasTo($appointment->email)
+            && $mail->appointment->is($appointment));
         $this->assertSame(AppointmentStatus::Confirmed, $appointment->status);
         $this->assertSame('2030-01-07 02:00:00', $appointment->start_at->utc()->format('Y-m-d H:i:s'));
         $this->assertSame('2030-01-07 02:30:00', $appointment->end_at->utc()->format('Y-m-d H:i:s'));
@@ -90,6 +96,16 @@ class BookAppointmentTest extends TestCase
         $this->assertDatabaseCount('appointments', 0);
     }
 
+    public function test_a_rejected_booking_queues_no_email()
+    {
+        Mail::fake();
+
+        $this->post('/book', $this->payload(['start_at' => '2030-01-07T02:10:00Z']))
+            ->assertSessionHasErrors('start_at');
+
+        Mail::assertNothingQueued();
+    }
+
     public function test_double_booking_race_returns_a_friendly_error()
     {
         Appointment::factory()->create(['start_at' => '2030-01-07 02:00:00', 'end_at' => '2030-01-07 02:30:00']);
@@ -99,10 +115,13 @@ class BookAppointmentTest extends TestCase
             ->shouldReceive('availableSlots')
             ->andReturn(collect([CarbonImmutable::parse(self::SLOT)]));
 
+        Mail::fake();
+
         $this->post('/book', $this->payload())
             ->assertSessionHasErrors(['start_at' => 'That time is no longer available. Please pick another.']);
 
         $this->assertDatabaseCount('appointments', 1);
+        Mail::assertNothingQueued();
     }
 
     public function test_details_are_validated()

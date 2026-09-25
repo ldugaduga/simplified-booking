@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Enums\AppointmentStatus;
 use App\Http\Requests\StoreBookingRequest;
+use App\Mail\AppointmentBooked;
 use App\Models\Appointment;
 use App\Models\Setting;
 use App\Services\SlotService;
@@ -13,6 +14,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
@@ -99,6 +101,8 @@ class BookingController extends Controller
             // Someone else took this exact slot between the check and the insert.
             throw ValidationException::withMessages(['start_at' => self::SLOT_TAKEN]);
         }
+
+        Mail::to($appointment->email)->queue(new AppointmentBooked($appointment));
 
         return redirect()->to(URL::temporarySignedRoute('booking.confirmed', now()->addDay(), $appointment));
     }
